@@ -19,9 +19,10 @@
 
 <body>
     <div class="menu">
+        <h2>Controls</h2>
         <button id="pause" class="button">pause</button>
         <button id="wireframe" class="button">wireframe</button>
-        <input type="range" id="radius" name="distance" min="0" max="3" step="any" value="0" oninput="updateRadius(this.value)"/>
+        <input type="range" id="radius" name="distance" min="-3" max="3" step="any" value="0" oninput="updateRadius(this.value)"/>
         <input type="range" id="radius" name="distance" min="-10" max="10" step="any" value="0" oninput="updateVelocity(this.value)"/>
     </div>
     <div id="pause-icon">
@@ -63,8 +64,12 @@
             paused = !paused;
             if (paused) {
                 pauseIcon.style.visibility = 'visible';
+                pauseButton.style.backgroundColor = 'white';
+                pauseButton.style.color = 'black';
             } else {
                 pauseIcon.style.visibility = 'hidden';
+                pauseButton.style.backgroundColor = 'black';
+                pauseButton.style.color = 'white';
             }
         });
 
@@ -80,6 +85,10 @@
 
         updateRadius = (value) => {
             distance = value;
+            time += 0.01;
+            console.log(futureCone.geometry.faces);
+            rotating(futureCone, distance);
+            rotating(pastCone, distance, 'past');
         }
 
         updateVelocity = (value) => {
@@ -125,7 +134,7 @@
         }
 
         rotating = (object, magnitude, flipped) => {
-            const scalePercentage = magnitude / magLimit;
+            const scalePercentage = Math.abs(magnitude) / magLimit;
             
             object.scale.set(1 * (1 + scalePercentage), 1 * (1 - scalePercentage + .1), 1 * (1 + scalePercentage))
             
