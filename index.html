@@ -98,8 +98,9 @@
             // rotateAroundWorldAxis(cone, xAxis, Math.PI);
             // cone.rotation.x = cone.position.x;]
             cone.rotation.y = time + 1.5; // rotates around the circle plane
-            cone.rotation.z = Math.PI / 3// the main tilt
-            cone.position.y = (cone.rotation.z - 1.57) / 4.71 * .3; // applies appropriate height to cone
+            cone.rotation.z = Math.PI / 3 // the main tilt
+            // cone.position.y = (cone.rotation.z - 1.57) / 4.71 * .3; // applies appropriate height to cone
+            cone.position.y = Math.cos(cone.rotation.z) * .3; // applies appropriate height to cone
             // cone.rotation.x = - Math.PI * 2
         }
 
@@ -135,7 +136,7 @@
             renderer.render(scene, camera);
             // cone.rotation.y += 0.05;
             // cone.position.y += 0.01;
-            console.log(cone.position)
+            // console.log(cone.geometry.vertices)
 
             time += 0.01;
             rotating(cone, 1);
