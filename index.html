@@ -18,6 +18,10 @@
 </head>
 
 <body>
+    <div class="menu">
+        <button id="pause" class="button">pause</button>
+        <button id="wireframe" class="button">wireframe</button>
+    </div>
     <script src="js/three.js"></script>
     <script src="js/controls/OrbitControls.js"></script>
     <script>
@@ -40,17 +44,25 @@
         let paused = false;
         let wire = true;
 
-        // let geometry = new THREE.BoxGeometry(1, 1, 1);
-        // let material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-        // let cube = new THREE.Mesh(geometry, material);
-        // scene.add(cube);
+        /////////
+        // DOM //
+        /////////
+        let pauseButton = document.getElementById('pause');
+        let wireframeSwitch = document.getElementById('wireframe');
+
+        pauseButton.addEventListener('click', (e) => {
+            paused = !paused;
+        });
+
+        wireframeSwitch.addEventListener('click', (e) => {
+            wire = !wire;
+        })
 
         /////////////
         // HELPERS //
         /////////////
         let xAxis = new THREE.Vector3(1, 0, 0);
-        let rotWorldMatrix;
-        // Rotate an object around an arbitrary axis in world space       
+        let rotWorldMatrix;     
         rotateAroundWorldAxis = (object, axis, radians) => {
             rotWorldMatrix = new THREE.Matrix4();
             rotWorldMatrix.makeRotationAxis(axis.normalize(), radians);
@@ -115,9 +127,6 @@
             object.position.y = Math.cos(cone.rotation.z) * .3; // applies appropriate height to cone
         }
 
-
-
-
         //////////
         // LINE //
         //////////
@@ -137,6 +146,9 @@
         //////////
         let cone = generateLightCone(0);
     
+        ////////////
+        // CAMERA //
+        ////////////
         camera.position.x = 3.24;
         camera.position.y = 2.13;
         camera.position.z = 3.73;
@@ -145,8 +157,6 @@
         let animate = () => {
             requestAnimationFrame(animate);
             renderer.render(scene, camera);
-            // cone.rotation.y += 0.05;
-            // cone.position.y += 0.01;
             console.log(cone)
             
             if (!paused) {
