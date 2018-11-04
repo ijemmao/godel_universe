@@ -22,7 +22,7 @@
         <h2>Controls</h2>
         <button id="pause" class="button">pause</button>
         <button id="wireframe" class="button">wireframe</button>
-        <input type="range" id="radius" name="distance" min="-3" max="3" step="any" value="0" oninput="updateRadius(this.value)"/>
+        <input type="range" id="radius" name="distance" min="0" max="3" step="any" value="0" oninput="updateRadius(this.value)"/>
         <input type="range" id="radius" name="distance" min="-10" max="10" step="any" value="0" oninput="updateVelocity(this.value)"/>
     </div>
     <div id="pause-icon">
@@ -134,7 +134,7 @@
         }
 
         rotating = (object, magnitude, flipped) => {
-            const scalePercentage = Math.abs(magnitude) / magLimit;
+            const scalePercentage = magnitude / magLimit;
             
             object.scale.set(1 * (1 + scalePercentage), 1 * (1 - scalePercentage + .1), 1 * (1 + scalePercentage))
             
