@@ -30,6 +30,15 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
+        ///////////////////////
+        // CONSTANTS & GLOBAL//
+        ///////////////////////
+        const magLimit = 3.5; // used to generate percentage to determine tilt
+        const heightLimit = .6 // height of cone when not moving around circle
+        const initRadius = .25 // initial radius of cone
+
+        let paused = false;
+
         // let geometry = new THREE.BoxGeometry(1, 1, 1);
         // let material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
         // let cube = new THREE.Mesh(geometry, material);
@@ -82,7 +91,7 @@
         }
 
         generateLightCone = (position) => {
-            let coneGeometry = new THREE.ConeGeometry(.25, .6, 32, true);
+            let coneGeometry = new THREE.ConeGeometry(initRadius, heightLimit, 32, true);
             let coneMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.9 });
             let cone = new THREE.Mesh(coneGeometry, coneMaterial);
             cone.position.y += 0.3;
@@ -92,16 +101,15 @@
         }
 
         rotating = (object, magnitude) => {
-            let shift = Math.abs(cone.position.y - .3); // shifts the cone betwee 0 to 0.
+            const scalePercentage = magnitude / magLimit;
+
+            object.scale.set(1 * (1 + scalePercentage), 1 * (1 - scalePercentage), 1 * (1 + scalePercentage))
+            
             object.position.x = (magnitude) * Math.cos(time) + 0;
             object.position.z = (magnitude) * Math.sin(time) + 0;
-            // rotateAroundWorldAxis(cone, xAxis, Math.PI);
-            // cone.rotation.x = cone.position.x;]
-            cone.rotation.y = time + 1.5; // rotates around the circle plane
-            cone.rotation.z = Math.PI / 3 // the main tilt
-            // cone.position.y = (cone.rotation.z - 1.57) / 4.71 * .3; // applies appropriate height to cone
-            cone.position.y = Math.cos(cone.rotation.z) * .3; // applies appropriate height to cone
-            // cone.rotation.x = - Math.PI * 2
+            object.rotation.y = time + 1.5; // rotates around the circle plane
+            object.rotation.z = scalePercentage * (Math.PI / 2) // main tilt of light cone
+            object.position.y = Math.cos(cone.rotation.z) * .3; // applies appropriate height to cone
         }
 
 
@@ -136,10 +144,12 @@
             renderer.render(scene, camera);
             // cone.rotation.y += 0.05;
             // cone.position.y += 0.01;
-            // console.log(cone.geometry.vertices)
-
-            time += 0.01;
-            rotating(cone, 1);
+            console.log(cone)
+            
+            if (!paused) {
+                time += 0.01;
+                rotating(cone, 3);
+            }
         }
         animate();
     </script>
