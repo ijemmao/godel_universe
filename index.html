@@ -18,54 +18,83 @@
 </head>
 
 <body>
+    <div class="menu">
+        <button id="pause" class="button">pause</button>
+        <button id="wireframe" class="button">wireframe</button>
+        <input type="range" id="radius" name="distance" min="0" max="3" step="any" value="0" oninput="updateRadius(this.value)"/>
+        <input type="range" id="radius" name="distance" min="-10" max="10" step="any" value="0" oninput="updateVelocity(this.value)"/>
+    </div>
+    <div id="pause-icon">
+        <div class="pause-block"></div>
+        <div class="pause-block"></div>
+    </div>
     <script src="js/three.js"></script>
     <script src="js/controls/OrbitControls.js"></script>
     <script>
 
         let scene = new THREE.Scene();
-        let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
         let renderer = new THREE.WebGLRenderer();
         let controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.update();
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // let geometry = new THREE.BoxGeometry(1, 1, 1);
-        // let material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-        // let cube = new THREE.Mesh(geometry, material);
-        // scene.add(cube);
+        ///////////////////////
+        // CONSTANTS & GLOBAL//
+        ///////////////////////
+        const magLimit = 3.4; // used to generate percentage to determine tilt
+        const heightLimit = .6 // height of cone when not moving around circle
+        const initRadius = .25 // initial radius of cone
+
+        let paused = false;
+        let wire = false;
+        let distance = 0;
+        let velocity = 0;
+
+        /////////
+        // DOM //
+        /////////
+        let pauseButton = document.getElementById('pause');
+        let pauseIcon = document.getElementById('pause-icon')
+        let wireframeSwitch = document.getElementById('wireframe');
+
+        pauseButton.addEventListener('click', (e) => {
+            paused = !paused;
+            if (paused) {
+                pauseIcon.style.visibility = 'visible';
+            } else {
+                pauseIcon.style.visibility = 'hidden';
+            }
+        });
+
+        wireframeSwitch.addEventListener('click', (e) => {
+            wire = !wire;
+        })
+
+        document.addEventListener('keydown', (e)=> {
+            if (e.which == 32) {
+                pauseButton.click();
+            }
+        })
+
+        updateRadius = (value) => {
+            distance = value;
+        }
+
+        updateVelocity = (value) => {
+            velocity = value;
+        }
 
         /////////////
         // HELPERS //
         /////////////
-        let xAxis = new THREE.Vector3(1, 0, 0);
-        let rotWorldMatrix;
-        // Rotate an object around an arbitrary axis in world space       
-        rotateAroundWorldAxis = (object, axis, radians) => {
-            rotWorldMatrix = new THREE.Matrix4();
-            rotWorldMatrix.makeRotationAxis(axis.normalize(), radians);
-
-            // old code for Three.JS pre r54:
-            //  rotWorldMatrix.multiply(object.matrix);
-            // new code for Three.JS r55+:
-            rotWorldMatrix.multiply(object.matrix);                // pre-multiply
-
-            object.matrix = rotWorldMatrix;
-
-            // old code for Three.js pre r49:
-            // object.rotation.getRotationFromMatrix(object.matrix, object.scale);
-            // old code for Three.js pre r59:
-            // object.rotation.setEulerFromRotationMatrix(object.matrix);
-            // code for r59+:
-            object.rotation.setFromRotationMatrix(object.matrix);
-        }
-        
         generateCircle = (radius, color) => {
             let circleGeometry = new THREE.CircleGeometry(radius, 90);
             let circleEdges = new THREE.EdgesGeometry(circleGeometry);
             let circle = new THREE.LineSegments(circleEdges, new THREE.LineBasicMaterial({ color: color }));
+            circle.rotateX(Math.PI / 2);
             scene.add(circle);
-            rotateAroundWorldAxis(circle, xAxis, Math.PI / 2);
         }
 
         generateLine = (start, end) => {
@@ -81,29 +110,37 @@
             scene.add(line);
         }
 
-        generateLightCone = (position) => {
-            let coneGeometry = new THREE.ConeGeometry(.25, .6, 32, true);
-            let coneMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.9 });
-            let cone = new THREE.Mesh(coneGeometry, coneMaterial);
-            cone.position.y += 0.3;
-            rotateAroundWorldAxis(cone, xAxis, Math.PI);
+        generateLightCone = (color, flipped) => {
+            let cone;
+            let coneGeometry = new THREE.ConeGeometry(initRadius, heightLimit, 32, true);
+            let coneEdges = new THREE.EdgesGeometry(coneGeometry);
+            let coneMaterial = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.9 });
+            wire ? cone = new THREE.LineSegments(coneEdges, new THREE.LineBasicMaterial({ color: color })) : cone = new THREE.Mesh(coneGeometry, coneMaterial);
+            coneGeometry.translate(0, -heightLimit / 2, 0);
+            if (!flipped) {
+                cone.rotateX(Math.PI)
+            }
             scene.add(cone);
             return cone;
         }
 
-        rotating = (object, magnitude) => {
-            object.position.x = magnitude * Math.cos(time) + 0;
-            object.position.z = magnitude * Math.sin(time) + 0;
-            // rotateAroundWorldAxis(cone, xAxis, Math.PI);
-            // cone.rotation.x = cone.position.x;]
-            cone.rotation.y = -time;
-            cone.rotation.z = Math.PI;
-            cone.rotation.x = 2 * Math.PI
-            cone.position.y = (cone.rotation.z - 1.57) / 1.57 * .3;
+        rotating = (object, magnitude, flipped) => {
+            const scalePercentage = magnitude / magLimit;
+            
+            object.scale.set(1 * (1 + scalePercentage), 1 * (1 - scalePercentage + .1), 1 * (1 + scalePercentage))
+            
+            if (!flipped) {
+                object.position.x = (magnitude) * Math.cos(time) + 0;
+                object.position.z = (magnitude) * Math.sin(time) + 0;
+                object.rotation.y = time + 1.5; // rotates around the circle plane
+                object.rotation.z = scalePercentage * (Math.PI / 2) // main tilt of light cone
+            } else {
+                object.position.x = (magnitude) * Math.cos(time);
+                object.position.z = (magnitude) * Math.sin(time);
+                object.rotation.y = -time + 1.5; // rotates around the circle plane
+                object.rotation.z = scalePercentage * (Math.PI / 2) // main tilt of light cone
+            }
         }
-
-
-
 
         //////////
         // LINE //
@@ -122,8 +159,12 @@
         //////////
         // CONE //
         //////////
-        let cone = generateLightCone(0);
+        let futureCone = generateLightCone(0xffff00);
+        let pastCone = generateLightCone(0x0000ff, 'past');
     
+        ////////////
+        // CAMERA //
+        ////////////
         camera.position.x = 3.24;
         camera.position.y = 2.13;
         camera.position.z = 3.73;
@@ -132,12 +173,13 @@
         let animate = () => {
             requestAnimationFrame(animate);
             renderer.render(scene, camera);
-            // cone.rotation.y += 0.05;
-            // cone.position.y += 0.01;
-            console.log(cone.position)
-
-            time += 0.01;
-            rotating(cone, 1);
+            
+            if (!paused) {
+                time += 0.01;
+                console.log(futureCone.geometry.faces);
+                rotating(futureCone, distance);
+                rotating(pastCone, distance, 'past');
+            }
         }
         animate();
     </script>
