@@ -21,7 +21,8 @@
     <div class="menu">
         <button id="pause" class="button">pause</button>
         <button id="wireframe" class="button">wireframe</button>
-        <input type="range" id="radius" name="distance" min="0" max="3" step="any" value="0" oninput="updateValue(this.value)"/>
+        <input type="range" id="radius" name="distance" min="0" max="3" step="any" value="0" oninput="updateRadius(this.value)"/>
+        <input type="range" id="radius" name="distance" min="-10" max="10" step="any" value="0" oninput="updateVelocity(this.value)"/>
     </div>
     <script src="js/three.js"></script>
     <script src="js/controls/OrbitControls.js"></script>
@@ -45,6 +46,7 @@
         let paused = false;
         let wire = true;
         let distance = 0;
+        let velocity = 0;
 
         /////////
         // DOM //
@@ -60,8 +62,12 @@
             wire = !wire;
         })
 
-        updateValue = (value) => {
+        updateRadius = (value) => {
             distance = value;
+        }
+
+        updateVelocity = (value) => {
+            velocity = value;
         }
 
         /////////////
@@ -109,28 +115,35 @@
             scene.add(line);
         }
 
-        generateLightCone = (position) => {
+        generateLightCone = (color, flipped) => {
             let cone;
             let coneGeometry = new THREE.ConeGeometry(initRadius, heightLimit, 32, true);
             let coneEdges = new THREE.EdgesGeometry(coneGeometry);
-            let coneMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.9 });
-            wire ? cone = new THREE.LineSegments(coneEdges, new THREE.LineBasicMaterial({ color: 0xffff00 })) : cone = new THREE.Mesh(coneGeometry, coneMaterial);
-            cone.position.y += 0.3;
-            rotateAroundWorldAxis(cone, xAxis, Math.PI);
+            let coneMaterial = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.9 });
+            wire ? cone = new THREE.LineSegments(coneEdges, new THREE.LineBasicMaterial({ color: color })) : cone = new THREE.Mesh(coneGeometry, coneMaterial);
+            if (!flipped) {
+                cone.position.y += 0.3;
+                rotateAroundWorldAxis(cone, xAxis, Math.PI);
+            } else {
+                cone.position.y -= 0.3;
+                console.log(cone.position)
+            }
             scene.add(cone);
             return cone;
         }
 
-        rotating = (object, magnitude) => {
+        rotating = (object, magnitude, flipped) => {
             const scalePercentage = magnitude / magLimit;
-
+            
             object.scale.set(1 * (1 + scalePercentage), 1 * (1 - scalePercentage), 1 * (1 + scalePercentage))
             
-            object.position.x = (magnitude) * Math.cos(time) + 0;
-            object.position.z = (magnitude) * Math.sin(time) + 0;
-            object.rotation.y = time + 1.5; // rotates around the circle plane
-            object.rotation.z = scalePercentage * (Math.PI / 2) // main tilt of light cone
-            object.position.y = Math.cos(cone.rotation.z) * .3; // applies appropriate height to cone
+            if (!flipped) {
+                object.position.x = (magnitude) * Math.cos(time) + 0;
+                object.position.z = (magnitude) * Math.sin(time) + 0;
+                object.rotation.y = time + 1.5; // rotates around the circle plane
+                object.rotation.z = scalePercentage * (Math.PI / 2) // main tilt of light cone
+                object.position.y = Math.cos(object.rotation.z) * .3; // applies appropriate height to cone
+            }
             // object.position.y += 0.001;
         }
 
@@ -151,7 +164,8 @@
         //////////
         // CONE //
         //////////
-        let cone = generateLightCone(0);
+        let futureCone = generateLightCone(0xffff00);
+        let pastCone = generateLightCone(0x0000ff, 'past');
     
         ////////////
         // CAMERA //
@@ -164,12 +178,12 @@
         let animate = () => {
             requestAnimationFrame(animate);
             renderer.render(scene, camera);
-            console.log(cone)
+            // console.log(futureCone)
             
             if (!paused) {
                 time += 0.01;
-                cone.position.y += 0.01;
-                rotating(cone, distance);
+                rotating(futureCone, distance);
+                rotating(pastCone, distance, 'past');
             }
         }
         animate();
