@@ -92,14 +92,14 @@
         }
 
         rotating = (object, magnitude) => {
-            cone.position.y = (cone.rotation.z - 1.57) / 1.57 * .3; // applies appropriate height to cone
-            let shift = Math.abs(cone.position.y - .3); // shifts the cone betwee 0 to 0.3
-            object.position.x = (shift + magnitude) * Math.cos(time) + 0;
-            object.position.z = (shift + magnitude) * Math.sin(time) + 0;
+            let shift = Math.abs(cone.position.y - .3); // shifts the cone betwee 0 to 0.
+            object.position.x = (magnitude) * Math.cos(time) + 0;
+            object.position.z = (magnitude) * Math.sin(time) + 0;
             // rotateAroundWorldAxis(cone, xAxis, Math.PI);
             // cone.rotation.x = cone.position.x;]
-            cone.rotation.y = time; // rotates around the circle plane
-            cone.rotation.z = Math.PI / 2 // the main tilt
+            cone.rotation.y = time + 1.5; // rotates around the circle plane
+            cone.rotation.z = Math.PI / 3// the main tilt
+            cone.position.y = (cone.rotation.z - 1.57) / 4.71 * .3; // applies appropriate height to cone
             // cone.rotation.x = - Math.PI * 2
         }
 
@@ -138,7 +138,7 @@
             console.log(cone.position)
 
             time += 0.01;
-            rotating(cone, 3);
+            rotating(cone, 1);
         }
         animate();
     </script>
