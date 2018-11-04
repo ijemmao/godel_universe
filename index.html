@@ -124,29 +124,10 @@
             return cone;
         }
 
-        rotateAboutPoint = (obj, point, axis, theta, pointIsWorld) => {
-            pointIsWorld = (pointIsWorld === undefined) ? false : pointIsWorld;
-
-            if (pointIsWorld) {
-                obj.parent.localToWorld(obj.position); // compensate for world coordinate
-            }
-
-            obj.position.sub(point); // remove the offset
-            obj.position.applyAxisAngle(axis, theta); // rotate the POSITION
-            obj.position.add(point); // re-add the offset
-
-            if (pointIsWorld) {
-                obj.parent.worldToLocal(obj.position); // undo world coordinates compensation
-            }
-
-            obj.rotateOnAxis(axis, theta); // rotate the OBJECT
-        }
-
         rotating = (object, magnitude, flipped) => {
             const scalePercentage = magnitude / magLimit;
             
             object.scale.set(1 * (1 + scalePercentage), 1 * (1 - scalePercentage + .1), 1 * (1 + scalePercentage))
-            // object.scale.set(1 * (1 + scalePercentage), 1, 1 * (1 + scalePercentage))
             
             if (!flipped) {
                 object.position.x = (magnitude) * Math.cos(time) + 0;
@@ -159,7 +140,6 @@
                 object.rotation.y = -time + 1.5; // rotates around the circle plane
                 object.rotation.z = scalePercentage * (Math.PI / 2) // main tilt of light cone
             }
-            // object.position.y += 0.001;
         }
 
         //////////
@@ -197,7 +177,6 @@
             if (!paused) {
                 time += 0.01;
                 console.log(futureCone.geometry.faces);
-                // console.log(futureCone.matrix.elements[4], futureCone.matrix.elements[7], futureCone.matrix.elements[11], futureCone.matrix.elements[12], futureCone.matrix.elements[14])
                 rotating(futureCone, distance);
                 rotating(pastCone, distance, 'past');
             }
