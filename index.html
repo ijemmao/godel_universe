@@ -38,6 +38,7 @@
         const initRadius = .25 // initial radius of cone
 
         let paused = false;
+        let wire = true;
 
         // let geometry = new THREE.BoxGeometry(1, 1, 1);
         // let material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
@@ -91,9 +92,11 @@
         }
 
         generateLightCone = (position) => {
+            let cone;
             let coneGeometry = new THREE.ConeGeometry(initRadius, heightLimit, 32, true);
+            let coneEdges = new THREE.EdgesGeometry(coneGeometry);
             let coneMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.9 });
-            let cone = new THREE.Mesh(coneGeometry, coneMaterial);
+            wire ? cone = new THREE.LineSegments(coneEdges, new THREE.LineBasicMaterial({ color: 0xffff00 })) : cone = new THREE.Mesh(coneGeometry, coneMaterial);
             cone.position.y += 0.3;
             rotateAroundWorldAxis(cone, xAxis, Math.PI);
             scene.add(cone);
@@ -148,7 +151,7 @@
             
             if (!paused) {
                 time += 0.01;
-                rotating(cone, 3);
+                rotating(cone, 0);
             }
         }
         animate();
