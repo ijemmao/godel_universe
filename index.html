@@ -1,0 +1,146 @@
+<!DOCTYPE>
+<html>
+
+<head>
+    <meta charset=utf-8>
+    <title>My first three.js app</title>
+    <link rel="stylesheet" tpye="text/css" href="./index.css" />
+    <style>
+        body {
+            margin: 0;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%
+        }
+    </style>
+</head>
+
+<body>
+    <script src="js/three.js"></script>
+    <script src="js/controls/OrbitControls.js"></script>
+    <script>
+
+        let scene = new THREE.Scene();
+        let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        let renderer = new THREE.WebGLRenderer();
+        let controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.update();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // let geometry = new THREE.BoxGeometry(1, 1, 1);
+        // let material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        // let cube = new THREE.Mesh(geometry, material);
+        // scene.add(cube);
+
+        /////////////
+        // HELPERS //
+        /////////////
+        let xAxis = new THREE.Vector3(1, 0, 0);
+        let rotWorldMatrix;
+        // Rotate an object around an arbitrary axis in world space       
+        rotateAroundWorldAxis = (object, axis, radians) => {
+            rotWorldMatrix = new THREE.Matrix4();
+            rotWorldMatrix.makeRotationAxis(axis.normalize(), radians);
+
+            // old code for Three.JS pre r54:
+            //  rotWorldMatrix.multiply(object.matrix);
+            // new code for Three.JS r55+:
+            rotWorldMatrix.multiply(object.matrix);                // pre-multiply
+
+            object.matrix = rotWorldMatrix;
+
+            // old code for Three.js pre r49:
+            // object.rotation.getRotationFromMatrix(object.matrix, object.scale);
+            // old code for Three.js pre r59:
+            // object.rotation.setEulerFromRotationMatrix(object.matrix);
+            // code for r59+:
+            object.rotation.setFromRotationMatrix(object.matrix);
+        }
+        
+        generateCircle = (radius, color) => {
+            let circleGeometry = new THREE.CircleGeometry(radius, 90);
+            let circleEdges = new THREE.EdgesGeometry(circleGeometry);
+            let circle = new THREE.LineSegments(circleEdges, new THREE.LineBasicMaterial({ color: color }));
+            scene.add(circle);
+            rotateAroundWorldAxis(circle, xAxis, Math.PI / 2);
+        }
+
+        generateLine = (start, end) => {
+            let lineMaterial = new THREE.LineBasicMaterial({
+                color: 0xffffff
+            });
+            let lineGeometry = new THREE.Geometry();
+            lineGeometry.vertices.push(
+                new THREE.Vector3(start.x, start.y, start.z),
+                new THREE.Vector3(end.x, end.y, end.z)
+            );
+            let line = new THREE.Line(lineGeometry, lineMaterial);
+            scene.add(line);
+        }
+
+        generateLightCone = (position) => {
+            let coneGeometry = new THREE.ConeGeometry(.25, .6, 32, true);
+            let coneMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.9 });
+            let cone = new THREE.Mesh(coneGeometry, coneMaterial);
+            cone.position.y += 0.3;
+            rotateAroundWorldAxis(cone, xAxis, Math.PI);
+            scene.add(cone);
+            return cone;
+        }
+
+        rotating = (object, magnitude) => {
+            object.position.x = magnitude * Math.cos(time) + 0;
+            object.position.z = magnitude * Math.sin(time) + 0;
+            // rotateAroundWorldAxis(cone, xAxis, Math.PI);
+            // cone.rotation.x = cone.position.x;]
+            cone.rotation.y = -time;
+            cone.rotation.z = Math.PI;
+            cone.rotation.x = 2 * Math.PI
+            cone.position.y = (cone.rotation.z - 1.57) / 1.57 * .3;
+        }
+
+
+
+
+        //////////
+        // LINE //
+        //////////
+        generateLine({x: -3.5, y: 0, z: 0}, {x: 3.5, y: 0, z: 0})
+        generateLine({x: 0, y: -3.5, z: 0}, {x: 0, y: 3.5, z: 0})
+        generateLine({x: 0, y: 0, z: -3.5}, {x: 0, y: 0, z: 3.5})
+
+        ////////////
+        // CIRCLE //
+        ////////////
+        generateCircle(3, 0xffffff);
+        generateCircle(2, 0xffffff);
+        generateCircle(1, 0xffffff);
+
+        //////////
+        // CONE //
+        //////////
+        let cone = generateLightCone(0);
+    
+        camera.position.x = 3.24;
+        camera.position.y = 2.13;
+        camera.position.z = 3.73;
+
+        let time = 0;
+        let animate = () => {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+            // cone.rotation.y += 0.05;
+            // cone.position.y += 0.01;
+            console.log(cone.position)
+
+            time += 0.01;
+            rotating(cone, 1);
+        }
+        animate();
+    </script>
+</body>
+
+</html>
