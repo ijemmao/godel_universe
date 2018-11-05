@@ -46,7 +46,7 @@ label {
 input[type=range] {
   -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
   width: 100%; /* Specific width is required for Firefox. */
-  background: white; /* Otherwise white in Chrome */
+  background: #16191e; /* Otherwise white in Chrome */
   height: 26px;
 }
 
@@ -63,7 +63,7 @@ input[type=range]::-ms-track {
   cursor: pointer;
 
   /* Hides the slider so custom styles can be added */
-  background: transparent; 
+  background: #16191e; 
   border-color: transparent;
   color: transparent;
 }
@@ -71,31 +71,31 @@ input[type=range]::-ms-track {
 /* Special styling for WebKit/Blink */
 input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  border: 1px solid #000000;
+  border: 1px solid #717171;
   height: 26px;
   width: 16px;
   border-radius: 3px;
-  background: #ffffff;
+  background: #16191e;
   cursor: pointer;
   margin-top: 0px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
 }
 
 /* All the same stuff for Firefox */
 input[type=range]::-moz-range-thumb {
-  border: 1px solid #000000;
+  border: 1px solid #717171;
   height: 26px;
   width: 16px;
   border-radius: 3px;
-  background: #ffffff;
+  background: #16191e;
   cursor: pointer;
 }
 
 /* All the same stuff for IE */
 input[type=range]::-ms-thumb {
-  border: 1px solid #000000;
+  border: 1px solid #717171;
   height: 26px;
   width: 16px;
   border-radius: 3px;
-  background: #ffffff;
+  background: #16191e;
   cursor: pointer;
 }
