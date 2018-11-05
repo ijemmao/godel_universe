@@ -39,6 +39,10 @@ button {
     background-color: white;
 }
 
+label {
+    color: white;
+}
+
 input[type=range] {
   -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
   width: 100%; /* Specific width is required for Firefox. */
