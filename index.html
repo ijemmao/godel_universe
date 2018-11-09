@@ -19,10 +19,15 @@
 
 <body>
     <div class="menu">
+        <h2>Controls</h2>
         <button id="pause" class="button">pause</button>
         <button id="wireframe" class="button">wireframe</button>
-        <input type="range" id="radius" name="distance" min="0" max="3" step="any" value="0" oninput="updateRadius(this.value)"/>
+        <label name="radius_label">radius</label>
+        <input type="range" id="radius" name="distance" min="0" max="3" step=".1" value="0" oninput="updateRadius(this.value)"/>
+        <label name="velocity_label">velocity</label>
         <input type="range" id="radius" name="distance" min="-10" max="10" step="any" value="0" oninput="updateVelocity(this.value)"/>
+        <label name="speed_label">speed</label>
+        <input type="range" id="speed" min="0.001" max="0.05" step="any" value="0.01" oninput="updateSpeed(this.value)" />
     </div>
     <div id="pause-icon">
         <div class="pause-block"></div>
@@ -51,6 +56,7 @@
         let wire = false;
         let distance = 0;
         let velocity = 0;
+        let incrementTime = 0.01;
 
         /////////
         // DOM //
@@ -63,8 +69,12 @@
             paused = !paused;
             if (paused) {
                 pauseIcon.style.visibility = 'visible';
+                pauseButton.style.backgroundColor = 'white';
+                pauseButton.style.color = 'black';
             } else {
                 pauseIcon.style.visibility = 'hidden';
+                pauseButton.style.backgroundColor = 'black';
+                pauseButton.style.color = 'white';
             }
         });
 
@@ -80,10 +90,17 @@
 
         updateRadius = (value) => {
             distance = value;
+            console.log(futureCone.geometry.faces);
+            rotating(futureCone, distance);
+            rotating(pastCone, distance, 'past');
         }
 
         updateVelocity = (value) => {
             velocity = value;
+        }
+
+        updateSpeed = (value) => {
+            incrementTime = parseFloat(value);
         }
 
         /////////////
@@ -95,6 +112,15 @@
             let circle = new THREE.LineSegments(circleEdges, new THREE.LineBasicMaterial({ color: color }));
             circle.rotateX(Math.PI / 2);
             scene.add(circle);
+            return circle;
+        }
+
+
+        generateHyperplane = (time) => {
+            for (let i = 1; i <= 3; i++) {
+                let cone = generateCircle(i, 0xffffff);
+                cone.position.y = time;
+            }
         }
 
         generateLine = (start, end) => {
@@ -140,6 +166,7 @@
                 object.rotation.y = -time + 1.5; // rotates around the circle plane
                 object.rotation.z = scalePercentage * (Math.PI / 2) // main tilt of light cone
             }
+            // object.position.y += 0.01;
         }
 
         //////////
@@ -156,6 +183,11 @@
         generateCircle(2, 0xffffff);
         generateCircle(1, 0xffffff);
 
+        ////////////////
+        // HYPERPLANE //
+        ////////////////
+        generateHyperplane(0);
+
         //////////
         // CONE //
         //////////
@@ -170,15 +202,22 @@
         camera.position.z = 3.73;
 
         let time = 0;
+        let lastTime = time;
         let animate = () => {
             requestAnimationFrame(animate);
             renderer.render(scene, camera);
             
             if (!paused) {
-                time += 0.01;
-                console.log(futureCone.geometry.faces);
+                time += incrementTime;
+                console.log(time)
+                // console.log(futureCone.geometry.faces);
                 rotating(futureCone, distance);
                 rotating(pastCone, distance, 'past');
+                // if (time - lastTime >= .5) {
+                //     lastTime = time;
+                //     generateHyperplane(time);
+                // }
+                // camera.position.y += 0.01;
             }
         }
         animate();
