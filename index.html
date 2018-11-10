@@ -57,6 +57,8 @@
         let distance = 0;
         let velocity = 0;
         let incrementTime = 0.01;
+        let index = 0;
+        const MAX_POINTS = 1000;
 
         /////////
         // DOM //
@@ -150,6 +152,31 @@
             return cone;
         }
 
+        generateWorldline = () => {
+            let worldlineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
+            let worldlineGeometry = new THREE.BufferGeometry();
+            let positions = new Float32Array(MAX_POINTS * 3);   
+            let drawCount = 2;
+            worldlineGeometry.setDrawRange(0, MAX_POINTS * 3);
+            worldlineGeometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            let line = new THREE.Line(worldlineGeometry, worldlineMaterial);
+            scene.add(line);
+            return line;
+        }
+
+        udpateWordline = (worldline, position) => {
+            console.log(worldline);
+            let positions = worldline.geometry.attributes.position.array;
+            console.log(positions);
+            if (index < MAX_POINTS) {
+
+                positions[index ++] = position.x;
+                positions[index ++] = position.y;
+                positions[index ++] = position.z;
+            }
+        }
+
         rotating = (object, magnitude, flipped) => {
             const scalePercentage = magnitude / magLimit;
             
@@ -160,21 +187,27 @@
                 object.position.z = (magnitude) * Math.sin(time) + 0;
                 object.rotation.y = time + 1.5; // rotates around the circle plane
                 object.rotation.z = scalePercentage * (Math.PI / 2) // main tilt of light cone
+                udpateWordline(subjectWorldline, object.position);
             } else {
                 object.position.x = (magnitude) * Math.cos(time);
                 object.position.z = (magnitude) * Math.sin(time);
                 object.rotation.y = -time + 1.5; // rotates around the circle plane
                 object.rotation.z = scalePercentage * (Math.PI / 2) // main tilt of light cone
             }
-            // object.position.y += 0.01;
+            object.position.y += 0.01;
         }
 
-        //////////
-        // LINE //
-        //////////
+        ////////////
+        // AXISES //
+        ////////////
         generateLine({x: -3.5, y: 0, z: 0}, {x: 3.5, y: 0, z: 0})
-        generateLine({x: 0, y: -3.5, z: 0}, {x: 0, y: 3.5, z: 0})
+        // generateLine({x: 0, y: -3.5, z: 0}, {x: 0, y: 3.5, z: 0})
         generateLine({x: 0, y: 0, z: -3.5}, {x: 0, y: 0, z: 3.5})
+
+        //////////////
+        // WORDLINE //
+        //////////////
+        let subjectWorldline = generateWorldline();
 
         ////////////
         // CIRCLE //
@@ -207,22 +240,22 @@
         let time = 0;
         let lastTime = time;
         let animate = () => {
-            console.log(camera);
+            // console.log(camera);
             requestAnimationFrame(animate);
             renderer.render(scene, camera);
-            
+
+            // camera.lookAt(futureCone.position); // centers on the future light cone
             if (!paused) {
                 time += incrementTime;
-                console.log(time)
-                // console.log(futureCone.geometry.faces);
                 rotating(futureCone, distance);
                 rotating(pastCone, distance, 'past');
-                // if (time - lastTime >= .5) {
-                //     lastTime = time;
-                //     generateHyperplane(time);
-                // }
-                // camera.position.y += 0.01;
+                if (time - lastTime >= .5) {
+                    lastTime = time;
+                    generateHyperplane(time);
+                }
+                camera.position.y += 0.01;
             }
+            subjectWorldline.geometry.attributes.position.needsUpdate = true;
         }
         animate();
     </script>
