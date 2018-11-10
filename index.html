@@ -18,7 +18,7 @@
 </head>
 
 <body>
-    <div class="menu">
+    <!-- <div class="menu">
         <h2>Controls</h2>
         <button id="pause" class="button">pause</button>
         <button id="wireframe" class="button">wireframe</button>
@@ -32,7 +32,7 @@
     <div id="pause-icon">
         <div class="pause-block"></div>
         <div class="pause-block"></div>
-    </div>
+    </div> -->
     <script src="js/three.js"></script>
     <script src="js/controls/OrbitControls.js"></script>
     <script>
@@ -61,47 +61,47 @@
         /////////
         // DOM //
         /////////
-        let pauseButton = document.getElementById('pause');
-        let pauseIcon = document.getElementById('pause-icon')
-        let wireframeSwitch = document.getElementById('wireframe');
+        // let pauseButton = document.getElementById('pause');
+        // let pauseIcon = document.getElementById('pause-icon')
+        // let wireframeSwitch = document.getElementById('wireframe');
 
-        pauseButton.addEventListener('click', (e) => {
-            paused = !paused;
-            if (paused) {
-                pauseIcon.style.visibility = 'visible';
-                pauseButton.style.backgroundColor = 'white';
-                pauseButton.style.color = 'black';
-            } else {
-                pauseIcon.style.visibility = 'hidden';
-                pauseButton.style.backgroundColor = 'black';
-                pauseButton.style.color = 'white';
-            }
-        });
+        // pauseButton.addEventListener('click', (e) => {
+        //     paused = !paused;
+        //     if (paused) {
+        //         pauseIcon.style.visibility = 'visible';
+        //         pauseButton.style.backgroundColor = 'white';
+        //         pauseButton.style.color = 'black';
+        //     } else {
+        //         pauseIcon.style.visibility = 'hidden';
+        //         pauseButton.style.backgroundColor = 'black';
+        //         pauseButton.style.color = 'white';
+        //     }
+        // });
 
-        wireframeSwitch.addEventListener('click', (e) => {
-            wire = !wire;
-        })
+        // wireframeSwitch.addEventListener('click', (e) => {
+        //     wire = !wire;
+        // })
 
-        document.addEventListener('keydown', (e)=> {
-            if (e.which == 32) {
-                pauseButton.click();
-            }
-        })
+        // document.addEventListener('keydown', (e)=> {
+        //     if (e.which == 32) {
+        //         pauseButton.click();
+        //     }
+        // })
 
-        updateRadius = (value) => {
-            distance = value;
-            console.log(futureCone.geometry.faces);
-            rotating(futureCone, distance);
-            rotating(pastCone, distance, 'past');
-        }
+        // updateRadius = (value) => {
+        //     distance = value;
+        //     console.log(futureCone.geometry.faces);
+        //     rotating(futureCone, distance);
+        //     rotating(pastCone, distance, 'past');
+        // }
 
-        updateVelocity = (value) => {
-            velocity = value;
-        }
+        // updateVelocity = (value) => {
+        //     velocity = value;
+        // }
 
-        updateSpeed = (value) => {
-            incrementTime = parseFloat(value);
-        }
+        // updateSpeed = (value) => {
+        //     incrementTime = parseFloat(value);
+        // }
 
         /////////////
         // HELPERS //
@@ -197,13 +197,17 @@
         ////////////
         // CAMERA //
         ////////////
-        camera.position.x = 3.24;
-        camera.position.y = 2.13;
-        camera.position.z = 3.73;
+        camera.position.x = 1.9;
+        camera.rotation.x = -0.37;
+        camera.rotation.y = 0.3;
+        camera.rotation.z = 0.115;
+        camera.position.y = 2.23;
+        camera.position.z = 5.73;
 
         let time = 0;
         let lastTime = time;
         let animate = () => {
+            console.log(camera);
             requestAnimationFrame(animate);
             renderer.render(scene, camera);
             
