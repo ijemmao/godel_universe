@@ -18,7 +18,7 @@
 </head>
 
 <body>
-    <!-- <div class="menu">
+    <div class="menu">
         <h2>Controls</h2>
         <button id="pause" class="button">pause</button>
         <button id="wireframe" class="button">wireframe</button>
@@ -32,7 +32,7 @@
     <div id="pause-icon">
         <div class="pause-block"></div>
         <div class="pause-block"></div>
-    </div> -->
+    </div>
     <script src="js/three.js"></script>
     <script src="js/controls/OrbitControls.js"></script>
     <script>
@@ -51,59 +51,59 @@
         const magLimit = 3.4; // used to generate percentage to determine tilt
         const heightLimit = .6 // height of cone when not moving around circle
         const initRadius = .25 // initial radius of cone
+        const MAX_POINTS = 100000;
 
+        let drawCount = 2;
         let paused = false;
         let wire = false;
         let distance = 0;
         let velocity = 0;
         let incrementTime = 0.01;
         let index = 0;
-        const MAX_POINTS = 1000;
 
         /////////
         // DOM //
         /////////
-        // let pauseButton = document.getElementById('pause');
-        // let pauseIcon = document.getElementById('pause-icon')
-        // let wireframeSwitch = document.getElementById('wireframe');
+        let pauseButton = document.getElementById('pause');
+        let pauseIcon = document.getElementById('pause-icon')
+        let wireframeSwitch = document.getElementById('wireframe');
 
-        // pauseButton.addEventListener('click', (e) => {
-        //     paused = !paused;
-        //     if (paused) {
-        //         pauseIcon.style.visibility = 'visible';
-        //         pauseButton.style.backgroundColor = 'white';
-        //         pauseButton.style.color = 'black';
-        //     } else {
-        //         pauseIcon.style.visibility = 'hidden';
-        //         pauseButton.style.backgroundColor = 'black';
-        //         pauseButton.style.color = 'white';
-        //     }
-        // });
+        pauseButton.addEventListener('click', (e) => {
+            paused = !paused;
+            if (paused) {
+                pauseIcon.style.visibility = 'visible';
+                pauseButton.style.backgroundColor = 'white';
+                pauseButton.style.color = 'black';
+            } else {
+                pauseIcon.style.visibility = 'hidden';
+                pauseButton.style.backgroundColor = 'black';
+                pauseButton.style.color = 'white';
+            }
+        });
 
-        // wireframeSwitch.addEventListener('click', (e) => {
-        //     wire = !wire;
-        // })
+        wireframeSwitch.addEventListener('click', (e) => {
+            wire = !wire;
+        })
 
-        // document.addEventListener('keydown', (e)=> {
-        //     if (e.which == 32) {
-        //         pauseButton.click();
-        //     }
-        // })
+        document.addEventListener('keydown', (e)=> {
+            if (e.which == 32) {
+                pauseButton.click();
+            }
+        })
 
-        // updateRadius = (value) => {
-        //     distance = value;
-        //     console.log(futureCone.geometry.faces);
-        //     rotating(futureCone, distance);
-        //     rotating(pastCone, distance, 'past');
-        // }
+        updateRadius = (value) => {
+            distance = value;
+            rotating(futureCone, distance);
+            rotating(pastCone, distance, 'past');
+        }
 
-        // updateVelocity = (value) => {
-        //     velocity = value;
-        // }
+        updateVelocity = (value) => {
+            velocity = value;
+        }
 
-        // updateSpeed = (value) => {
-        //     incrementTime = parseFloat(value);
-        // }
+        updateSpeed = (value) => {
+            incrementTime = parseFloat(value);
+        }
 
         /////////////
         // HELPERS //
@@ -155,26 +155,35 @@
         generateWorldline = () => {
             let worldlineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
             let worldlineGeometry = new THREE.BufferGeometry();
-            let positions = new Float32Array(MAX_POINTS * 3);   
-            let drawCount = 2;
-            worldlineGeometry.setDrawRange(0, MAX_POINTS * 3);
+            let positions = new Float32Array(MAX_POINTS * 3);
             worldlineGeometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+            drawCount = 2;
+            worldlineGeometry.setDrawRange(0, drawCount);
             
             let line = new THREE.Line(worldlineGeometry, worldlineMaterial);
+            // udpateWordline(line, futureCone.position);
+
             scene.add(line);
             return line;
         }
 
-        udpateWordline = (worldline, position) => {
-            console.log(worldline);
-            let positions = worldline.geometry.attributes.position.array;
-            console.log(positions);
-            if (index < MAX_POINTS) {
 
-                positions[index ++] = position.x;
-                positions[index ++] = position.y;
-                positions[index ++] = position.z;
+        udpateWorldline = (worldline, position) => {
+            let positions = worldline.geometry.attributes.position.array;
+            let tempIndex = 0;
+            // for (let i = 0; i < MAX_POINTS; i++) {
+            //     positions[tempIndex ++] = position.x;
+            //     positions[tempIndex ++] = position.y;
+            //     positions[tempIndex ++] = position.z;
+            // }
+            if (index < MAX_POINTS) {
+                positions[index * 3 - 3] = position.x;
+                positions[index * 3 - 2] = position.y;
+                positions[index * 3 - 1] = position.z;
             }
+            worldline.geometry.attributes.position.needsUpdate = true;
+            index += 1;
         }
 
         rotating = (object, magnitude, flipped) => {
@@ -187,7 +196,7 @@
                 object.position.z = (magnitude) * Math.sin(time) + 0;
                 object.rotation.y = time + 1.5; // rotates around the circle plane
                 object.rotation.z = scalePercentage * (Math.PI / 2) // main tilt of light cone
-                udpateWordline(subjectWorldline, object.position);
+                udpateWorldline(subjectWorldline, object.position);
             } else {
                 object.position.x = (magnitude) * Math.cos(time);
                 object.position.z = (magnitude) * Math.sin(time);
@@ -240,22 +249,24 @@
         let time = 0;
         let lastTime = time;
         let animate = () => {
-            // console.log(camera);
             requestAnimationFrame(animate);
             renderer.render(scene, camera);
 
             // camera.lookAt(futureCone.position); // centers on the future light cone
             if (!paused) {
+                console.log(subjectWorldline);
+                drawCount = (drawCount + 1) % MAX_POINTS;
+                subjectWorldline.geometry.setDrawRange(1, drawCount);
+
                 time += incrementTime;
                 rotating(futureCone, distance);
                 rotating(pastCone, distance, 'past');
-                if (time - lastTime >= .5) {
-                    lastTime = time;
-                    generateHyperplane(time);
-                }
+                // if (time - lastTime >= .5) {
+                //     lastTime = time;
+                //     generateHyperplane(time);
+                // }
                 camera.position.y += 0.01;
             }
-            subjectWorldline.geometry.attributes.position.needsUpdate = true;
         }
         animate();
     </script>
