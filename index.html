@@ -196,14 +196,15 @@
                 object.position.z = (magnitude) * Math.sin(time) + 0;
                 object.rotation.y = time + 1.5; // rotates around the circle plane
                 object.rotation.z = scalePercentage * (Math.PI / 2) // main tilt of light cone
+                object.position.y += 0.01;
                 udpateWorldline(subjectWorldline, object.position);
             } else {
                 object.position.x = (magnitude) * Math.cos(time);
                 object.position.z = (magnitude) * Math.sin(time);
                 object.rotation.y = -time + 1.5; // rotates around the circle plane
                 object.rotation.z = scalePercentage * (Math.PI / 2) // main tilt of light cone
+                object.position.y += 0.01;
             }
-            object.position.y += 0.01;
         }
 
         ////////////
