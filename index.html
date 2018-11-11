@@ -35,6 +35,7 @@
         <div class="pause-block"></div>
     </div>
     <script src="js/three.js"></script>
+    <script src="js/Tween.js"></script>
     <script src="js/controls/OrbitControls.js"></script>
     <script>
 
@@ -62,6 +63,7 @@
         let incrementTime = 0.01;
         let index = 0;
         let focused = true;
+        let hitMaxDistance = false;
 
         /////////
         // DOM //
@@ -120,7 +122,6 @@
             if (focused) {
                 controls.target.copy(futureCone.position);
                 camera.position = futureCone.position;
-                camera.position.y += 0.01;
             } else {
                 controls.target.copy(new THREE.Vector3(0, 0, 0));
             }
@@ -198,10 +199,10 @@
             index += 1;
         }
 
-        rotating = (object, magnitude, flipped) => {
+        positiveRotating = (object, magnitude, flipped) => {
             const scalePercentage = magnitude / magLimit;
             
-            object.scale.set(1 * (1 + scalePercentage), 1 * (1 - scalePercentage + .1), 1 * (1 + scalePercentage))
+            object.scale.set(1 * (1 + scalePercentage), 1 * (1 - scalePercentage + .1), 1 * (1 + scalePercentage));
             
             if (!flipped) {
                 object.position.x = (magnitude) * Math.cos(time) + 0;
@@ -216,6 +217,40 @@
                 object.rotation.y = -time + 1.5; // rotates around the circle plane
                 object.rotation.z = scalePercentage * (Math.PI / 2) // main tilt of light cone
                 object.position.y += 0.01;
+            }
+        }
+
+        negativeRotating = (object, magnitude, flipped) => {
+            const scalePercentage = magnitude / magLimit;
+            object.scale.set(1 * (1 + scalePercentage), 1 * (1 - scalePercentage + .1), 1 * (1 + scalePercentage));
+
+            if (!flipped) {
+                object.position.x = (magnitude) * Math.cos(time) + 0;
+                object.position.z = (magnitude) * Math.sin(time) + 0;
+                object.rotation.y = time + 1.5;
+                object.rotation.z = scalePercentage * (-Math.PI / 2) + (Math.PI);
+                object.position.y -= 0.01;
+                udpateWorldline(subjectWorldline, object.position);
+            } else {
+                object.position.x = (magnitude) * Math.cos(time);
+                object.position.z = (magnitude) * Math.sin(time);
+                object.rotation.y = -time + 1.5;
+                object.rotation.z = scalePercentage * (-Math.PI / 2) + (Math.PI);
+                object.position.y -= 0.01;
+            }
+        }
+
+        loopDistance = () => {
+            if (!hitMaxDistance) {
+                distance += 0.003;
+                if (distance >= 3) {
+                    hitMaxDistance = true;
+                }
+            } else {
+                if (distance > 2.6) {
+                    // hitMaxDistance = false;
+                    distance -= 0.003;
+                }
             }
         }
 
@@ -260,6 +295,7 @@
 
         let time = 0;
         let lastTime = time;
+
         let animate = () => {
             requestAnimationFrame(animate);
             renderer.render(scene, camera);
@@ -268,11 +304,19 @@
             cameraLogic();
             if (!paused) {
                 drawCount = (drawCount + 1) % MAX_POINTS;
-                subjectWorldline.geometry.setDrawRange(1, drawCount);
+                subjectWorldline.geometry.setDrawRange(1, drawCount - 4);
 
                 time += incrementTime;
-                rotating(futureCone, distance);
-                rotating(pastCone, distance, 'past');
+                loopDistance();
+                if (hitMaxDistance) {
+                    camera.position.y -= 0.01;
+                    negativeRotating(futureCone, distance);
+                    negativeRotating(pastCone, distance, 'past');
+                } else {
+                    camera.position.y += 0.01;
+                    positiveRotating(futureCone, distance);
+                    positiveRotating(pastCone, distance, 'past');
+                }
                 // if (time - lastTime >= .5) {
                 //     lastTime = time;
                 //     generateHyperplane(time);
