@@ -23,6 +23,14 @@
         <button id="pause" class="button">pause</button>
         <button id="wireframe" class="button">wireframe</button>
         <button id="focus" class="button">focus</button>
+        <div>
+            <input type="checkbox" name="worldline" checked>
+            <label for="worldline">worldline</label>
+            <input type="checkbox" name="lightcones" checked>
+            <label for="lightcones">lightcones</label>
+            <input type="checkbox" name="hyperplanes">
+            <label for="hyperplanes">hyperplanes</label>
+        </div>
         <!-- <label name="radius_label">radius</label>
         <input type="range" id="radius" name="distance" min="0" max="3" step=".1" value="0" oninput="updateRadius(this.value)"/> -->
     </div>
@@ -68,6 +76,10 @@
         let pauseButton = document.getElementById('pause');
         let pauseIcon = document.getElementById('pause-icon')
         let focusOnLightCone = document.getElementById('focus');
+        let lightcones = document.querySelector("input[name='lightcones']");
+        let drawnWorldline = document.querySelector("input[name='worldline']");
+        let hyperplanes = document.querySelector("input[name='hyperplans']");
+
 
         pauseButton.addEventListener('click', (e) => {
             paused = !paused;
@@ -83,14 +95,25 @@
         });
 
         focusOnLightCone.addEventListener('click', (e) => {
-            focused = !focused;
-        })
+           focused = !focused;
+        });
 
         document.addEventListener('keydown', (e)=> {
             if (e.which == 32) {
                 pauseButton.click();
             }
-        })
+        });
+
+        lightcones.addEventListener('change', (e) => {
+            futureCone.visible = e.target.checked;
+            pastCone.visible = e.target.checked;
+        });
+
+        drawnWorldline.addEventListener('change', (e) => {
+            subjectWorldline.visible = e.target.checked;
+        });
+
+
 
         updateRadius = (value) => {
             distance = value;
