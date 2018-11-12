@@ -182,8 +182,8 @@
             worldlineGeometry.setDrawRange(0, drawCount);
             
             let line = new THREE.Line(worldlineGeometry, worldlineMaterial);
-            // udpateWordline(line, futureCone.position);
-
+            line.frustumCulled = false;
+            
             scene.add(line);
             return line;
         }
@@ -226,7 +226,7 @@
         negativeRotating = (object, magnitude, flipped) => {
             const scalePercentage = magnitude / magLimit;
             object.scale.set(1 * (1 + scalePercentage), 1 * (1 - scalePercentage + .1), 1 * (1 + scalePercentage));
-            easeDown += 0.01;
+            easeDown += 0.001;
 
             if (!flipped) {
                 object.position.x = (magnitude) * Math.cos(time) + 0;
