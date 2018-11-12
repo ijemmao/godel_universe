@@ -23,12 +23,8 @@
         <button id="pause" class="button">pause</button>
         <button id="wireframe" class="button">wireframe</button>
         <button id="focus" class="button">focus</button>
-        <label name="radius_label">radius</label>
-        <input type="range" id="radius" name="distance" min="0" max="3" step=".1" value="0" oninput="updateRadius(this.value)"/>
-        <label name="velocity_label">velocity</label>
-        <input type="range" id="radius" name="distance" min="-10" max="10" step="any" value="0" oninput="updateVelocity(this.value)"/>
-        <label name="speed_label">speed</label>
-        <input type="range" id="speed" min="0.001" max="0.05" step="any" value="0.01" oninput="updateSpeed(this.value)" />
+        <!-- <label name="radius_label">radius</label>
+        <input type="range" id="radius" name="distance" min="0" max="3" step=".1" value="0" oninput="updateRadius(this.value)"/> -->
     </div>
     <div id="pause-icon">
         <div class="pause-block"></div>
@@ -57,7 +53,6 @@
 
         let drawCount = 2;
         let paused = false;
-        let wire = false;
         let distance = 0;
         let velocity = 0;
         let incrementTime = 0.01;
@@ -72,7 +67,6 @@
         /////////
         let pauseButton = document.getElementById('pause');
         let pauseIcon = document.getElementById('pause-icon')
-        let wireframeSwitch = document.getElementById('wireframe');
         let focusOnLightCone = document.getElementById('focus');
 
         pauseButton.addEventListener('click', (e) => {
@@ -88,12 +82,7 @@
             }
         });
 
-        wireframeSwitch.addEventListener('click', (e) => {
-            wire = !wire;
-        })
-
         focusOnLightCone.addEventListener('click', (e) => {
-            console.log('okokok', focused)
             focused = !focused;
         })
 
@@ -107,14 +96,6 @@
             distance = value;
             rotating(futureCone, distance);
             rotating(pastCone, distance, 'past');
-        }
-
-        updateVelocity = (value) => {
-            velocity = value;
-        }
-
-        updateSpeed = (value) => {
-            incrementTime = parseFloat(value);
         }
 
         /////////////
@@ -159,11 +140,9 @@
         }
 
         generateLightCone = (color, flipped) => {
-            let cone;
             let coneGeometry = new THREE.ConeGeometry(initRadius, heightLimit, 32, true);
-            let coneEdges = new THREE.EdgesGeometry(coneGeometry);
             let coneMaterial = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.9 });
-            wire ? cone = new THREE.LineSegments(coneEdges, new THREE.LineBasicMaterial({ color: color })) : cone = new THREE.Mesh(coneGeometry, coneMaterial);
+            let cone = new THREE.Mesh(coneGeometry, coneMaterial);
             coneGeometry.translate(0, -heightLimit / 2, 0);
             if (!flipped) {
                 cone.rotateX(Math.PI)
@@ -313,11 +292,11 @@
                 time += incrementTime;
                 loopDistance();
                 if (hitMaxDistance) {
-                    camera.position.y -= 0.01;
+                    camera.position.y = futureCone.position.y;
                     negativeRotating(futureCone, distance);
                     negativeRotating(pastCone, distance, 'past');
                 } else {
-                    camera.position.y += 0.01;
+                    camera.position.y = futureCone.position.y;
                     positiveRotating(futureCone, distance);
                     positiveRotating(pastCone, distance, 'past');
                 }
