@@ -64,6 +64,8 @@
         let index = 0;
         let focused = true;
         let hitMaxDistance = false;
+        let easeUp = 0;
+        let easeDown = 0;
 
         /////////
         // DOM //
@@ -201,6 +203,7 @@
 
         positiveRotating = (object, magnitude, flipped) => {
             const scalePercentage = magnitude / magLimit;
+            const easePercentage = (magnitude + .4 - 3) / .4;
             
             object.scale.set(1 * (1 + scalePercentage), 1 * (1 - scalePercentage + .1), 1 * (1 + scalePercentage));
             
@@ -209,34 +212,35 @@
                 object.position.z = (magnitude) * Math.sin(time) + 0;
                 object.rotation.y = time + 1.5; // rotates around the circle plane
                 object.rotation.z = scalePercentage * (Math.PI / 2) // main tilt of light cone
-                object.position.y += 0.01;
+                object.position.y += easePercentage >= 0 ? 0.01 - (0.01 * easePercentage) : 0.01; // eases into changing direction
                 udpateWorldline(subjectWorldline, object.position);
             } else {
                 object.position.x = (magnitude) * Math.cos(time);
                 object.position.z = (magnitude) * Math.sin(time);
                 object.rotation.y = -time + 1.5; // rotates around the circle plane
                 object.rotation.z = scalePercentage * (Math.PI / 2) // main tilt of light cone
-                object.position.y += 0.01;
+                object.position.y += easePercentage >= 0 ? 0.01 - (0.01 * easePercentage) : 0.01; // eases into chaning direction
             }
         }
 
         negativeRotating = (object, magnitude, flipped) => {
             const scalePercentage = magnitude / magLimit;
             object.scale.set(1 * (1 + scalePercentage), 1 * (1 - scalePercentage + .1), 1 * (1 + scalePercentage));
+            easeDown += 0.01;
 
             if (!flipped) {
                 object.position.x = (magnitude) * Math.cos(time) + 0;
                 object.position.z = (magnitude) * Math.sin(time) + 0;
                 object.rotation.y = time + 1.5;
                 object.rotation.z = scalePercentage * (-Math.PI / 2) + (Math.PI);
-                object.position.y -= 0.01;
+                object.position.y -= easeDown < 1 ? 0.01 * easeDown : 0.01;
                 udpateWorldline(subjectWorldline, object.position);
             } else {
                 object.position.x = (magnitude) * Math.cos(time);
                 object.position.z = (magnitude) * Math.sin(time);
                 object.rotation.y = -time + 1.5;
                 object.rotation.z = scalePercentage * (-Math.PI / 2) + (Math.PI);
-                object.position.y -= 0.01;
+                object.position.y -= easeDown < 1 ? 0.01 * easeDown : 0.01;
             }
         }
 
