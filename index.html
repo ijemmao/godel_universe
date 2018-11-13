@@ -41,6 +41,7 @@
     <script src="js/three.js"></script>
     <script src="js/Tween.js"></script>
     <script src="js/controls/OrbitControls.js"></script>
+    <script src="js/helpers.js"></script>
     <script>
 
         let scene = new THREE.Scene();
@@ -51,30 +52,27 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        ///////////////////////
-        // CONSTANTS & GLOBAL//
-        ///////////////////////
+        /***************/
+        /** constants **/
+        /***************/
         const magLimit = 3.4; // used to generate percentage to determine tilt
         const heightLimit = .6 // height of cone when not moving around circle
         const initRadius = .25 // initial radius of cone
-        const MAX_POINTS = 100000;
-
+        const MAX_POINTS = 100000; // used to draw wordline
+        
+        /**********************/
+        /** global variables **/
+        /**********************/
         let drawCount = 2;
         let paused = false;
         let distance = 0;
         let velocity = 0;
         let incrementTime = 0.01;
-        let index = 0;
         let focused = true;
-        let hitMaxDistance = false;
-        let easeUp = 0;
-        let easeDown = 0;
-        let direction = 1;
-        let directionVector = new THREE.Vector3();
 
-        /////////
-        // DOM //
-        /////////
+        /*********/
+        /** dom **/
+        /*********/
         let pauseButton = document.getElementById('pause');
         let pauseIcon = document.getElementById('pause-icon')
         let focusOnLightCone = document.getElementById('focus');
@@ -117,183 +115,34 @@
 
         updateRadius = (value) => {
             distance = value;
-            rotating(futureCone, distance);
-            rotating(pastCone, distance, 'past');
+            HELPERS.rotating(futureCone, pastCone, distance);
         }
 
-        /////////////
-        // HELPERS //
-        /////////////
-        cameraLogic = () => {
-            if (focused) {
-                controls.target.copy(futureCone.position);
-                camera.position = futureCone.position;
-            } else {
-                controls.target.copy(new THREE.Vector3(0, 0, 0));
-            }
-        }
-        generateCircle = (radius, color) => {
-            let circleGeometry = new THREE.CircleGeometry(radius, 90);
-            let circleEdges = new THREE.EdgesGeometry(circleGeometry);
-            let circle = new THREE.LineSegments(circleEdges, new THREE.LineBasicMaterial({ color: color }));
-            circle.rotateX(Math.PI / 2);
-            scene.add(circle);
-            return circle;
-        }
+        /************/
+        /** shapes **/
+        /************/
 
+        // axises
+        HELPERS.generateLine({x: -3.5, y: 0, z: 0}, {x: 3.5, y: 0, z: 0})
+        HELPERS.generateLine({x: 0, y: 0, z: -3.5}, {x: 0, y: 0, z: 3.5})
 
-        generateHyperplane = (time) => {
-            for (let i = 1; i <= 3; i++) {
-                let cone = generateCircle(i, 0xffffff);
-                cone.position.y = time;
-            }
-        }
+        // wordline
+        let subjectWorldline = HELPERS.generateWorldline();
 
-        generateLine = (start, end) => {
-            let lineMaterial = new THREE.LineBasicMaterial({
-                color: 0xffffff
-            });
-            let lineGeometry = new THREE.Geometry();
-            lineGeometry.vertices.push(
-                new THREE.Vector3(start.x, start.y, start.z),
-                new THREE.Vector3(end.x, end.y, end.z)
-            );
-            let line = new THREE.Line(lineGeometry, lineMaterial);
-            scene.add(line);
-        }
+        
+        // circles
+        HELPERS.generateCircle(3, 0xffffff);
+        HELPERS.generateCircle(2, 0xffffff);
+        HELPERS.generateCircle(1, 0xffffff);
 
-        generateLightCone = (color, flipped) => {
-            let coneGeometry = new THREE.ConeGeometry(initRadius, heightLimit, 32, true);
-            let coneMaterial = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.9 });
-            let cone = new THREE.Mesh(coneGeometry, coneMaterial);
-            coneGeometry.translate(0, -heightLimit / 2, 0);
-            if (!flipped) {
-                cone.rotateX(Math.PI)
-            }
-            scene.add(cone);
-            return cone;
-        }
+        // base hyperplane
+        HELPERS.generateHyperplane(0);
 
-        generateWorldline = () => {
-            let worldlineMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 });
-            let worldlineGeometry = new THREE.BufferGeometry();
-            let positions = new Float32Array(MAX_POINTS * 3);
-            worldlineGeometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-            drawCount = 2;
-            worldlineGeometry.setDrawRange(0, drawCount);
-            
-            let line = new THREE.Line(worldlineGeometry, worldlineMaterial);
-            line.frustumCulled = false;
-            
-            scene.add(line);
-            return line;
-        }
-
-
-        udpateWorldline = (worldline, position) => {
-            let positions = worldline.geometry.attributes.position.array;
-            let tempIndex = 0;
-            if (index < MAX_POINTS) {
-                positions[index * 3 - 3] = position.x;
-                positions[index * 3 - 2] = position.y;
-                positions[index * 3 - 1] = position.z;
-            }
-            if (index * 3 - 6 >= 0) {
-                let lastVector = new THREE.Vector3(positions[index * 3 - 6], positions[index * 3 - 5], positions[index * 3 - 4]);
-                let newVector = new THREE.Vector3(positions[index * 3 - 3], positions[index * 3 - 2], positions[index * 3 - 1]);
-                directionVector.subVectors(newVector, lastVector).normalize();
-
-            }
-            worldline.geometry.attributes.position.needsUpdate = true;
-            index += 1;
-        }
-
-        rotating = (future, past, magnitude) => {
-            const scalePercentage = magnitude / magLimit; // percetange of distance traveled
-            const easePercentage = (magnitude + .4 - 3) / .4; // used to ease when about to switch directions
-
-            future.scale.set(1 * (1 + scalePercentage), 1 * (1 - scalePercentage + .1), 1 * (1 + scalePercentage)); // widens lightcone
-            past.scale.set(1 * (1 + scalePercentage), 1 * (1 - scalePercentage + .1), 1 * (1 + scalePercentage)); // widens lightcone
-            if (3 - magnitude <= -2.6645352591003757e-15) {
-                direction *= -1;
-                easeDown = 0;
-            }
-
-            if (direction < 0) {
-                easeDown += 0.001;
-            }
-
-            // future light cone
-            future.position.x = (magnitude) * Math.cos(time) + 0;
-            future.position.z = (magnitude) * Math.sin(time) + 0;
-            future.rotation.y = time + 1.5;
-            if (direction < 0) {
-                future.position.y -= easeDown < 1 ? 0.01 * easeDown : 0.01; // eases in falling down
-            } else {
-                future.position.y += easePercentage >= 0 ? 0.01 - (0.01 * easePercentage) : 0.01; // eases in rising upward
-            }
-            future.rotation.z = direction > 0 ? scalePercentage * (Math.PI / 2) : scalePercentage * (Math.PI / 2) + (.882352941 - scalePercentage) *  Math.PI; // handles the tilt of the light cone
-            udpateWorldline(subjectWorldline, future.position);
-            
-            // past light cone
-            past.position.x = (magnitude) * Math.cos(time) + 0;
-            past.position.z = (magnitude) * Math.sin(time) + 0;
-            past.rotation.y = -time + 1.5;
-            if (direction < 0) {
-                past.position.y -= easeDown < 1 ? 0.01 * easeDown : 0.01;
-            } else {
-                past.position.y += easePercentage >= 0 ? 0.01 - (0.01 * easePercentage) : 0.01;
-            }
-            past.rotation.z = direction > 0 ? scalePercentage * (Math.PI / 2) : scalePercentage * (Math.PI / 2) + (.882352941 - scalePercentage) *  Math.PI;
-        }
-
-        loopDistance = () => {
-            if (!hitMaxDistance) {
-                distance += 0.003;
-                if (distance >= 3) {
-                    hitMaxDistance = true;
-                }
-            } else {
-                distance -= 0.001;
-                if (distance < 0) {
-                    hitMaxDistance = false;
-                }
-            }
-        }
-
-        ////////////
-        // AXISES //
-        ////////////
-        generateLine({x: -3.5, y: 0, z: 0}, {x: 3.5, y: 0, z: 0})
-        generateLine({x: 0, y: 0, z: -3.5}, {x: 0, y: 0, z: 3.5})
-
-        //////////////
-        // WORDLINE //
-        //////////////
-        let subjectWorldline = generateWorldline();
-
-        ////////////
-        // CIRCLE //
-        ////////////
-        generateCircle(3, 0xffffff);
-        generateCircle(2, 0xffffff);
-        generateCircle(1, 0xffffff);
-
-        ////////////////
-        // HYPERPLANE //
-        ////////////////
-        generateHyperplane(0);
-
-        //////////
-        // CONE //
-        //////////
-        let futureCone = generateLightCone(0xffff00);
-        let pastCone = generateLightCone(0x0000ff, 'past');
+        // light cones
+        let futureCone = HELPERS.generateLightCone(0xffff00);
+        let pastCone = HELPERS.generateLightCone(0x0000ff, 'past');
     
-        ////////////
-        // CAMERA //
-        ////////////
+        // camera
         camera.position.x = 1.9;
         camera.rotation.x = -0.37;
         camera.rotation.y = 0.3;
@@ -301,6 +150,7 @@
         camera.position.y = 2.23;
         camera.position.z = 5.73;
 
+        // time
         let time = 0;
         let lastTime = time;
 
@@ -309,18 +159,19 @@
             renderer.render(scene, camera);
 
             // Focusing Camera Logic
-            cameraLogic();
+            HELPERS.cameraLogic(futureCone, focused, controls, camera);
             if (!paused) {
                 drawCount = (drawCount + 1) % MAX_POINTS;
                 subjectWorldline.geometry.setDrawRange(1, drawCount - 4);
 
                 time += incrementTime;
                 camera.position.y = futureCone.position.y;
-                rotating(futureCone, pastCone, distance);
-                loopDistance();
+                HELPERS.rotating(futureCone, pastCone, distance, magLimit);
+                distance = HELPERS.loopDistance(distance);
+
                 // if (time - lastTime >= .5) {
                 //     lastTime = time;
-                //     generateHyperplane(time);
+                //     HELPERS.generateHyperplane(time);
                 // }
             }
         }
