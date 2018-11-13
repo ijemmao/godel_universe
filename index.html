@@ -69,6 +69,8 @@
         let hitMaxDistance = false;
         let easeUp = 0;
         let easeDown = 0;
+        let direction = 1;
+        let directionVector = new THREE.Vector3();
 
         /////////
         // DOM //
@@ -112,8 +114,6 @@
         drawnWorldline.addEventListener('change', (e) => {
             subjectWorldline.visible = e.target.checked;
         });
-
-
 
         updateRadius = (value) => {
             distance = value;
@@ -199,51 +199,53 @@
                 positions[index * 3 - 2] = position.y;
                 positions[index * 3 - 1] = position.z;
             }
+            if (index * 3 - 6 >= 0) {
+                let lastVector = new THREE.Vector3(positions[index * 3 - 6], positions[index * 3 - 5], positions[index * 3 - 4]);
+                let newVector = new THREE.Vector3(positions[index * 3 - 3], positions[index * 3 - 2], positions[index * 3 - 1]);
+                directionVector.subVectors(newVector, lastVector).normalize();
+
+            }
             worldline.geometry.attributes.position.needsUpdate = true;
             index += 1;
         }
 
-        positiveRotating = (object, magnitude, flipped) => {
-            const scalePercentage = magnitude / magLimit;
-            const easePercentage = (magnitude + .4 - 3) / .4;
-            
-            object.scale.set(1 * (1 + scalePercentage), 1 * (1 - scalePercentage + .1), 1 * (1 + scalePercentage));
-            
-            if (!flipped) {
-                object.position.x = (magnitude) * Math.cos(time) + 0;
-                object.position.z = (magnitude) * Math.sin(time) + 0;
-                object.rotation.y = time + 1.5; // rotates around the circle plane
-                object.rotation.z = scalePercentage * (Math.PI / 2) // main tilt of light cone
-                object.position.y += easePercentage >= 0 ? 0.01 - (0.01 * easePercentage) : 0.01; // eases into changing direction
-                udpateWorldline(subjectWorldline, object.position);
-            } else {
-                object.position.x = (magnitude) * Math.cos(time);
-                object.position.z = (magnitude) * Math.sin(time);
-                object.rotation.y = -time + 1.5; // rotates around the circle plane
-                object.rotation.z = scalePercentage * (Math.PI / 2) // main tilt of light cone
-                object.position.y += easePercentage >= 0 ? 0.01 - (0.01 * easePercentage) : 0.01; // eases into chaning direction
-            }
-        }
+        rotating = (future, past, magnitude) => {
+            const scalePercentage = magnitude / magLimit; // percetange of distance traveled
+            const easePercentage = (magnitude + .4 - 3) / .4; // used to ease when about to switch directions
 
-        negativeRotating = (object, magnitude, flipped) => {
-            const scalePercentage = magnitude / magLimit;
-            object.scale.set(1 * (1 + scalePercentage), 1 * (1 - scalePercentage + .1), 1 * (1 + scalePercentage));
-            easeDown += 0.001;
-
-            if (!flipped) {
-                object.position.x = (magnitude) * Math.cos(time) + 0;
-                object.position.z = (magnitude) * Math.sin(time) + 0;
-                object.rotation.y = time + 1.5;
-                object.rotation.z = scalePercentage * (-Math.PI / 2) + (Math.PI);
-                object.position.y -= easeDown < 1 ? 0.01 * easeDown : 0.01;
-                udpateWorldline(subjectWorldline, object.position);
-            } else {
-                object.position.x = (magnitude) * Math.cos(time);
-                object.position.z = (magnitude) * Math.sin(time);
-                object.rotation.y = -time + 1.5;
-                object.rotation.z = scalePercentage * (-Math.PI / 2) + (Math.PI);
-                object.position.y -= easeDown < 1 ? 0.01 * easeDown : 0.01;
+            future.scale.set(1 * (1 + scalePercentage), 1 * (1 - scalePercentage + .1), 1 * (1 + scalePercentage)); // widens lightcone
+            past.scale.set(1 * (1 + scalePercentage), 1 * (1 - scalePercentage + .1), 1 * (1 + scalePercentage)); // widens lightcone
+            if (3 - magnitude <= -2.6645352591003757e-15) {
+                direction *= -1;
+                easeDown = 0;
             }
+
+            if (direction < 0) {
+                easeDown += 0.001;
+            }
+
+            // future light cone
+            future.position.x = (magnitude) * Math.cos(time) + 0;
+            future.position.z = (magnitude) * Math.sin(time) + 0;
+            future.rotation.y = time + 1.5;
+            if (direction < 0) {
+                future.position.y -= easeDown < 1 ? 0.01 * easeDown : 0.01; // eases in falling down
+            } else {
+                future.position.y += easePercentage >= 0 ? 0.01 - (0.01 * easePercentage) : 0.01; // eases in rising upward
+            }
+            future.rotation.z = direction > 0 ? scalePercentage * (Math.PI / 2) : scalePercentage * (Math.PI / 2) + (.882352941 - scalePercentage) *  Math.PI; // handles the tilt of the light cone
+            udpateWorldline(subjectWorldline, future.position);
+            
+            // past light cone
+            past.position.x = (magnitude) * Math.cos(time) + 0;
+            past.position.z = (magnitude) * Math.sin(time) + 0;
+            past.rotation.y = -time + 1.5;
+            if (direction < 0) {
+                past.position.y -= easeDown < 1 ? 0.01 * easeDown : 0.01;
+            } else {
+                past.position.y += easePercentage >= 0 ? 0.01 - (0.01 * easePercentage) : 0.01;
+            }
+            past.rotation.z = direction > 0 ? scalePercentage * (Math.PI / 2) : scalePercentage * (Math.PI / 2) + (.882352941 - scalePercentage) *  Math.PI;
         }
 
         loopDistance = () => {
@@ -253,9 +255,9 @@
                     hitMaxDistance = true;
                 }
             } else {
-                if (distance > 2.6) {
-                    // hitMaxDistance = false;
-                    distance -= 0.003;
+                distance -= 0.001;
+                if (distance < 0) {
+                    hitMaxDistance = false;
                 }
             }
         }
@@ -313,16 +315,9 @@
                 subjectWorldline.geometry.setDrawRange(1, drawCount - 4);
 
                 time += incrementTime;
+                camera.position.y = futureCone.position.y;
+                rotating(futureCone, pastCone, distance);
                 loopDistance();
-                if (hitMaxDistance) {
-                    camera.position.y = futureCone.position.y;
-                    negativeRotating(futureCone, distance);
-                    negativeRotating(pastCone, distance, 'past');
-                } else {
-                    camera.position.y = futureCone.position.y;
-                    positiveRotating(futureCone, distance);
-                    positiveRotating(pastCone, distance, 'past');
-                }
                 // if (time - lastTime >= .5) {
                 //     lastTime = time;
                 //     generateHyperplane(time);
