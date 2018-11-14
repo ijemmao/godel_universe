@@ -1,18 +1,16 @@
 @import url('https://fonts.googleapis.com/css?family=Roboto+Mono');
 body {
     font-family: 'Roboto Mono', sans-serif;
+    background-color: black;
 }
 
 .menu {
     position: absolute;
-    height: 150px;
     width: 250px;
     background-color: transparent;
     border: 1px solid white;
-}
-
-.menu h2 {
     color: white;
+    padding: 10px;
 }
 
 button {
@@ -98,4 +96,18 @@ input[type=range]::-ms-thumb {
   border-radius: 3px;
   background: #16191e;
   cursor: pointer;
+}
+
+.menu .information-image-container {
+  display: flex;
+  justify-content: center;
+  overflow-y: scroll;
+}
+
+.information-image {
+  height: 13vh;
+}
+
+.right {
+  right: 0;
 }
