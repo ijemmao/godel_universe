@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css?family=Roboto+Mono');
 body {
     font-family: 'Roboto Mono', sans-serif;
+    background-color: black;
 }
 
 .menu {
@@ -100,6 +101,7 @@ input[type=range]::-ms-thumb {
 .menu .information-image-container {
   display: flex;
   justify-content: center;
+  overflow-y: scroll;
 }
 
 .information-image {
