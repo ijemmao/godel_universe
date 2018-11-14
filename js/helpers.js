@@ -5,7 +5,7 @@ let easeInto = 1;
 let direction = 1;
 let directionVector = new THREE.Vector3();
 let hitMaxDistance = false;
-let travelBackTime = 3;
+let travelBackTime = 15;
 
 const cameraLogic = (futureCone, focused, controls, camera) => {
   if (focused) {
