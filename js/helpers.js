@@ -149,7 +149,6 @@ loopDistance = (distance) => {
     easeInto = 1;
     if (distance >= 3) {
       hitMaxDistance = true;
-      console.log(hitMaxDistance, time, distance / 3.4);
       lastTime = time;
     }
   } else {
