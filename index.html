@@ -69,6 +69,8 @@
         let velocity = 0;
         let incrementTime = 0.01;
         let focused = true;
+        let raycaster = new THREE.Raycaster();
+        let mouse = new THREE.Vector2(), INTERSECTED;
 
         /*********/
         /** dom **/
@@ -118,6 +120,19 @@
             HELPERS.rotating(futureCone, pastCone, distance);
         }
 
+        onWindowResize = () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        window.addEventListener('resize', onWindowResize, false);
+
+        onMouseMove = (e) => {
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = (e.clientY / window.innerHeight) * 2 - 1;
+        }
+        document.addEventListener('mousemove', onMouseMove, false);
+
         /************/
         /** shapes **/
         /************/
@@ -156,7 +171,28 @@
 
         let animate = () => {
             requestAnimationFrame(animate);
-            renderer.render(scene, camera);
+            
+
+            camera.updateMatrixWorld();
+            raycaster.setFromCamera(mouse, camera);
+            let intersects = raycaster.intersectObjects(scene.children);
+            // intersects.forEach((intersect) => {
+            //     intersect.object.material.color.set( 0xff0000 );
+            // })
+
+            if (intersects.length > 0) {
+                if (INTERSECTED != intersects[0].object) {
+                    if (INTERSECTED) INTERSECTED.material.color.set(0xff0000);
+                    INTERSECTED = intersects[0].object;
+                    INTERSECTED.material.color = INTERSECTED.material.color;
+                    // INTERSECTED.material.emissive.setHex(0xff0000);
+                }
+            } else {
+                if (INTERSECTED) INTERSECTED.material.color.set(0xff0000);
+                INTERSECTED = null;
+            }
+
+            console.log(mouse);
 
             // Focusing Camera Logic
             HELPERS.cameraLogic(futureCone, focused, controls, camera);
@@ -174,6 +210,7 @@
                 //     HELPERS.generateHyperplane(time);
                 // }
             }
+            renderer.render(scene, camera);
         }
         animate();
     </script>
