@@ -45,7 +45,7 @@ const generateLine = (start, end) => {
 
 const generateLightCone = (color, flipped) => {
   let coneGeometry = new THREE.ConeGeometry(initRadius, heightLimit, 32, true);
-  let coneMaterial = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.9 });
+  let coneMaterial = new THREE.MeshBasicMaterial({ color: color, }); //transparent: true, opacity: 0.9 });
   let cone = new THREE.Mesh(coneGeometry, coneMaterial);
   coneGeometry.translate(0, -heightLimit / 2, 0);
   if (!flipped) {
