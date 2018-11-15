@@ -21,7 +21,7 @@
     <div class="menu">
         <h2>Controls</h2>
         <button id="pause" class="button">pause</button>
-        <button id="focus" class="button">focus</button>
+        <button id="focus" class="button" style="background-color: white; color: black;">focus</button>
         <div>
             <input type="checkbox" name="worldline" checked>
             <label for="worldline">worldline</label>
@@ -82,6 +82,7 @@
         let focused = true;
         let raycaster = new THREE.Raycaster();
         let mouse = new THREE.Vector2(-1000, 1000), INTERSECTED;
+        let centerOnFocus = true;
 
         /*********/
         /** dom **/
@@ -109,11 +110,24 @@
 
         focusOnLightCone.addEventListener('click', (e) => {
            focused = !focused;
+           if (focused) {
+                focusOnLightCone.style.backgroundColor = 'white';
+                focusOnLightCone.style.color = 'black';
+            } else {
+                focusOnLightCone.style.backgroundColor = 'black';
+                focusOnLightCone.style.color = 'white';
+            }
         });
 
         document.addEventListener('keydown', (e)=> {
-            if (e.which == 32) {
+            if (e.which == 80) {
                 pauseButton.click();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.which == 70) {
+                focusOnLightCone.click();
             }
         });
 
@@ -144,6 +158,16 @@
             mouse.y = (e.clientY / window.innerHeight) * 2 - 1;
         }
         document.addEventListener('mousemove', onMouseMove, false);
+
+        onMouseDown = (e) => {
+            centerOnFocus = false;
+        }
+        document.addEventListener('mousedown', onMouseDown, false);
+        
+        onMouseUp = (e) => {
+            centerOnFocus = true;
+        }
+        document.addEventListener('mouseup', onMouseUp, false);
 
         /************/
         /** shapes **/
@@ -176,20 +200,21 @@
         let time = 0;
         let lastTime = time;
 
-        camera.lookAt(scene.position);
         let animate = () => {
             requestAnimationFrame(animate);
 
             // Focusing Camera Logic
-            HELPERS.cameraLogic(futureCone, focused, controls, camera);
+            HELPERS.cameraLogic(futureCone, focused, controls, camera, centerOnFocus);
             if (!paused) {
                 
                 drawCount = (drawCount + 1) % MAX_POINTS;
                 subjectWorldline.geometry.setDrawRange(1, drawCount - 4);
 
                 time += incrementTime;
-                camera.position.y = futureCone.position.y;
-                HELPERS.rotating(futureCone, pastCone, distance, magLimit);
+                let changeHeight = HELPERS.rotating(futureCone, pastCone, distance, magLimit);
+                if (centerOnFocus){
+                    camera.position.y += changeHeight;
+                }
                 distance = HELPERS.loopDistance(distance);
 
                 // if (time - lastTime >= .5) {

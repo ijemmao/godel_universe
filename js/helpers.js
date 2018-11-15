@@ -92,6 +92,7 @@ const updateWorldline = (worldline, position) => {
 const rotating = (future, past, magnitude, magLimit) => {
   const scalePercentage = magnitude / magLimit; // percetange of distance traveled
   const easePercentage = (magnitude + .4 - 3) / .4; // used to ease when about to switch directions
+  let travelDistance;
 
   future.scale.set(1 * (1 + scalePercentage), 1 * (1 - scalePercentage + .1), 1 * (1 + scalePercentage)); // widens lightcone
   past.scale.set(1 * (1 + scalePercentage), 1 * (1 - scalePercentage + .1), 1 * (1 + scalePercentage)); // widens lightcone
@@ -109,14 +110,17 @@ const rotating = (future, past, magnitude, magLimit) => {
   if (scalePercentage >= .81) {
     // going into the past
     easeUp = 1;
-    future.position.y -= (0.01 * easeDown) * easeInto;
+    travelDistance = -1 * (0.01 * easeDown) * easeInto;
+    future.position.y += travelDistance;
   } else if (scalePercentage < .81) {
     // going into the future
     easeDown = 0;
     if (scalePercentage >= .7) {
-      future.position.y += (0.01 - (0.01 * scalePercentage)) * easeUp;
+      travelDistance = (0.01 - (0.01 * scalePercentage)) * easeUp;
+      future.position.y += travelDistance;
     } else {
-      future.position.y += 0.01 - (0.01 * scalePercentage);
+      travelDistance = 0.01 - (0.01 * scalePercentage);
+      future.position.y += travelDistance;
     }
   }
 
@@ -130,17 +134,21 @@ const rotating = (future, past, magnitude, magLimit) => {
   if (scalePercentage >= .81) {
     // going into the past
     easeUp = 1;
-    past.position.y -= (0.01 * easeDown) * easeInto;
+    travelDistance = -1 * (0.01 * easeDown) * easeInto;
+    past.position.y += travelDistance;
   } else if (scalePercentage < .81) {
     // going into the future
     easeDown = 0;
     if (scalePercentage >= .70) {
-      past.position.y += (0.01 - (0.01 * scalePercentage)) * easeUp;
+      travelDistance = (0.01 - (0.01 * scalePercentage)) * easeUp;
+      past.position.y += travelDistance;
     } else {
-      past.position.y += 0.01 - (0.01 * scalePercentage);
+      travelDistance = 0.01 - (0.01 * scalePercentage);
+      past.position.y += travelDistance;
     }
   }
   past.rotation.z = scalePercentage * Math.PI / 2;
+  return travelDistance;
 }
 
 loopDistance = (distance) => {
