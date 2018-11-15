@@ -145,7 +145,7 @@ const rotating = (future, past, magnitude, magLimit) => {
 
 loopDistance = (distance) => {
   if (!hitMaxDistance) {
-    distance += 0.003;
+    distance += 0.002;
     easeInto = 1;
     if (distance >= 3) {
       hitMaxDistance = true;
