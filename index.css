@@ -97,17 +97,3 @@ input[type=range]::-ms-thumb {
   background: #16191e;
   cursor: pointer;
 }
-
-.menu .information-image-container {
-  display: flex;
-  justify-content: center;
-  overflow-y: scroll;
-}
-
-.information-image {
-  height: 13vh;
-}
-
-.right {
-  right: 0;
-}
